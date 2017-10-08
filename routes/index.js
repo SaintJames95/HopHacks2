@@ -2,69 +2,134 @@ var express = require('express');
 var router = express.Router();
 var mongodb = require('mongodb');
 
-router.get('/', function(req, res, next) {
-  res.render('home');
-});
+function makeChoices(totalCalories, database) {
+  var breakfast = ""
+  var lunch = ""
+  var dinner = ""
+  var breakfastCal = (totalCalories / 4).toString()
+  var lunchCal = (totalCalories / 4).toString()
+  var dinnerCal = (totalCalories / 2).toString()
 
-router.get('/sam', function(req, res, next) {
-  var MongoClient = mongodb.MongoClient;
-  var url = 'mongodb://localhost:27017/hackumbc';
+  database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*breakfast.*/i }, calories: { $lte: breakfastCal } } }, { $sample: { size: 1 } }]).toArray(function (err, results) {
+    if (err)
+      { console.log('failed') }
+    else
+      {breakfast = results}
+  });
 
-  MongoClient.connect(url, function (err, db) {
-    if (err) {
-      err.message = "Failed To Connect to MongoDB";
-    }
+  database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*lunch.*/i }, calories: { $lte: lunchCal } } }, { $sample: { size: 1 } }]).toArray(function (err, results) {
+    if (err)
+      { console.log('failed') }
     else
     {
-      console.log('Connection established to', url);
-      
-      var queryResults = db.collection('recipes').find({}).limit(3).toArray(function (err, results){
-        if(err)
-        {
-          console.log('failed')
-        }
-        else
-        {
+      lunch = results
+    }
+  });
 
-          var groccery_list = []
-          var ingredients_list = []
+  database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*dinner.*/i }, calories: { $lte: dinnerCal } } }, { $sample: { size: 1 } }]).toArray(function (err, results) {
+    if (err)
+      { console.log('failed') }
+    else
+    {
+      dinner = results
+    }
+  });
 
-          var j = 0
-          results.forEach(function (doc) {
-            var ingredients = doc.ingredients
-            ingredients_list[j] = new Array()
+    //console.log([breakfast, lunch, dinner])
 
-            ingredients.forEach(function (ingredient)
-            {
-              var qty = 0;
-              var qty_unchanged = ingredient.primQty.split(' ')
+    return [breakfast, lunch, dinner]
+  }
 
-              for(i = 0; i < qty_unchanged.length; i++)
+  router.get('/', function(req, res, next) {
+    res.render('home');
+  });
+
+  router.get('/sam', function(req, res, next) {
+    var MongoClient = mongodb.MongoClient;
+    var url = 'mongodb://localhost:27017/hackumbc';
+
+    MongoClient.connect(url, function (err, db) {
+      if (err) {
+        err.message = "Failed To Connect to MongoDB";
+      }
+      else
+      {
+        console.log('Connection established to', url);
+
+        var totalCalories = 2000
+        var database = db
+        var breakfast = ""
+        var lunch = ""
+        var dinner = ""
+        var breakfastCal = (totalCalories / 4).toString()
+        var lunchCal = (totalCalories / 4).toString()
+        var dinnerCal = (totalCalories / 2).toString()
+
+        database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*breakfast.*/i }, calories: { $lte: breakfastCal } } }, { $sample: { size: 1 } }]).toArray(function (err, results) {
+          if (err)
+            { console.log('failed') }
+          else
+            {breakfast = results}
+        });
+
+        database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*lunch.*/i }, calories: { $lte: lunchCal } } }, { $sample: { size: 1 } }]).toArray(function (err, results) {
+          if (err)
+            { console.log('failed') }
+          else
+          {
+            lunch = results
+          }
+        });
+
+        database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*dinner.*/i }, calories: { $lte: dinnerCal } } }, { $sample: { size: 1 } }]).toArray(function (err, results) {
+          if (err)
+            { console.log('failed') }
+          else
+          {
+            dinner = results
+            var results = [breakfast[0], lunch[0], dinner[0]]
+            console.log(results)
+            var groccery_list = []
+            var ingredients_list = []
+
+            var j = 0
+            results.forEach(function (doc) {
+              var ingredients = doc.ingredients
+              console.log(ingredients)
+              ingredients_list[j] = new Array()
+
+              ingredients.forEach(function (ingredient)
               {
-                var add = eval(qty_unchanged[i])
-                if (isNaN(parseFloat(add)))
+                var qty = 0;
+                var qty_unchanged = ingredient.primQty.split(' ')
+
+                for(i = 0; i < qty_unchanged.length; i++)
                 {
-                  add = 0
+                  var add = eval(qty_unchanged[i])
+                  if (isNaN(parseFloat(add)))
+                  {
+                    add = 0
+                  }
+                  qty += add
                 }
-                qty += add
-              }
 
-              var qty_name = ingredient.primUom.name
-              var name = ingredient.ingredientName
+                var qty_name = ingredient.primUom.name
+                var name = ingredient.ingredientName
 
-              var obj = {
+                obj = {
 
-                name: name,
-                qty_name: qty_name,
-                qty: qty
+                  name: name,
+                  qty_name: qty_name,
+                  qty: qty
 
-              }
+                }
 
-              ingredients_list[j].push(obj)
-              groccery_list.push(obj)
+                ingredients_list[j].push(obj)
+                groccery_list.push(obj)
+              })
+              j++
             })
-            j++
-          })
+          }
 
           var obj = {
             monday: {
@@ -103,12 +168,13 @@ router.get('/sam', function(req, res, next) {
             }, 
             groccery_list: groccery_list
           }
+
           res.json(obj)
-        }
-        db.close()
-      });
-    }
-  })
+        });
+      }
+      db.close()
+    }) 
+
 });
 
 /*

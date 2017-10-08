@@ -30,8 +30,6 @@ function doThing() {
             // DO THING HERE
             //var myDB = db.collection('recipes');
             getMccormickData(db)
-
-
         }
     })
 }
@@ -43,7 +41,7 @@ function getMccormickData(database)
   var options = {
     host: "gdt-api.mccormick.com",
     port: 443,
-    path: '/recipes?page=4&size=3',
+    path: '/recipes?page=0&size=400',
     method: 'GET',
     headers: {
       'Content-type': 'application/json',
@@ -56,9 +54,18 @@ function getMccormickData(database)
     console.log('STATUS: ' + res.statusCode);
     console.log('HEADERS: ' + JSON.stringify(res.headers));
     res.setEncoding('utf8');
+
     res.on('data', function (chunk) {
       data += chunk;
     });
+
+    res.on('end', function() {
+      console.log(data)
+      data = JSON.parse(data)
+      jsonToMongo(database, data.content)
+    });
+
+  }).end();
 }
 
 //Put Mccormick Response in Mongo
@@ -69,49 +76,8 @@ function jsonToMongo(database, theData) {
             next(err);
         }
     });
-
-    //database.close();
+    database.close();
 };
-
-function makeChoices(totalCalories, database) {
-    var breakfast = ""
-    var lunch = ""
-    var dinner = ""
-    var breakfastCal = (totalCalories / 4).toString()
-    var lunchCal = (totalCalories / 4).toString()
-    var dinnerCal = (totalCalories / 2).toString()
-
-    database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*breakfast.*/i }, calories: { $lte: breakfastCal } } }, { $sample: { size: 70 } }]).toArray(function (err, results) {
-        if (err)
-        { console.log('failed') }
-        else
-        {
-            breakfast = results
-            console.log(breakfast);
-        }
-    });
-
-    database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*lunch.*/i }, calories: { $lte: lunchCal } } }, { $sample: { size: 70 } }]).toArray(function (err, results) {
-        if (err)
-        { console.log('failed') }
-        else
-        {
-            lunch = results
-            console.log(lunch);
-        }
-    });
-
-    database.collection('recipes').aggregate([{ $match: { tag_names: { $regex: /.*dinner.*/i }, calories: { $lte: dinnerCal } } }, { $sample: { size: 70 } }]).toArray(function (err, results) {
-        if (err)
-        { console.log('failed') }
-        else
-        {
-            dinner = results
-            console.log(dinner);
-        }
-    });
-
-}
 
 //Iterate through the recipies collection
 
@@ -174,28 +140,15 @@ function recipesIter(database) {
                         }
                     }
                 }
-
                 if (dFlag == false) {
                     // set to lunch
                     results[i].tag_names = results[i].tag_names + ",Lunch";
                 }
-            
-
                 database.collection("recipes").update( { id: results[i].id }, { $set: { tag_names: results[i].tag_names } }, { multi: true });
-                //console.log(database.collection("recipes").find({ _id: results[i]._id }).tag_names)
             }
-            console.log(results[i].tag_names)
-            
-        }
-        
-        //   console.log("MESSAGE", myDoc.tag_names)
+        }        
         database.close();
     });
-    
-    //database.collection("recipes").find().forEach(function (doc) { console.log(doc.tag_names) });
-   // 
-
-
 };
 
 //DON'T MODIFY ANYTHING BELOW
