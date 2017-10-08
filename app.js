@@ -22,7 +22,6 @@ function doThing() {
   MongoClient.connect(url, function (err, db) {
     if (err) {
       err.message = "Failed To Connect to MongoDB";
-      return next(err);
     }
     else
     {
@@ -41,7 +40,7 @@ function getMccormickData(database)
   var options = {
     host: "gdt-api.mccormick.com",
     port: 443,
-    path: '/recipes?page=0&size=100',
+    path: '/recipes?page=0&size=300',
     method: 'GET',
     headers: {
       'Content-type': 'application/json',
@@ -76,6 +75,7 @@ function jsonToMongo(database, theData) {
       next(err);
     } 
   });
+  database.close();
 };
 
 //DON'T MODIFY ANYTHING BELOW
