@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
 
 router.get('/database', function(req, res, next) {
   var MongoClient = mongodb.MongoClient;
-  var url = 'mongodb://localhost:27017/sampsite';
+  var url = 'mongodb://localhost:27017/hackumbc';
 
   // Connect to the server
   MongoClient.connect(url, function (err, db) {
@@ -19,7 +19,7 @@ router.get('/database', function(req, res, next) {
 
     //Get the database collection 
     console.log('Connection established to', url);
-    var myDB = db.collection('testdb');
+    var myDB = db.collection('recipes');
 
     //Get all recipes
     myDB.find({}).toArray(function (err, result) {
