@@ -10,95 +10,82 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
-
-//Pre
-
-  //Getting the Data
-
-var data = ""
 var https = require('https');
 
-function jsonToMongo(theData) {
-  var MongoClient = mongodb.MongoClient;
-  var url = 'mongodb://localhost:27017/sampsite';
+//Do the things
+doThing();
 
-    // Connect to the server
+function doThing() {
+  var MongoClient = mongodb.MongoClient;
+  var url = 'mongodb://localhost:27017/hackumbc';
+
   MongoClient.connect(url, function (err, db) {
     if (err) {
       err.message = "Failed To Connect to MongoDB";
       return next(err);
     }
-
-    //Get the database collection 
-    console.log('Connection established to', url);
-    var myDB = db.collection('testdb');
-
-    //Get all recipes
-    myDB.insert(theData, function (err, result) {
-      if (err) {
-        next(err);
-      } 
-      else {
-      }
-      console.log('Closing DB connection...')
-      db.close();
-      console.log('Connection Closed')
-    });
-  });
+    else
+    {
+      console.log('Connection established to', url);
+      
+      // DO THING HERE
+      var myDB = db.collection('recipes');
+      getMccormickData(myDB)
+    }
+  })
 }
 
-/*
-var options = {
-  host: "gdt-api.mccormick.com",
-  port: 443,
-  path: '/recipes?page=0&size=20',
-  method: 'GET',
-  headers: {
-            'Content-type': 'application/json',
-            'x-api-key': '0CjwofWEIr38gpQIaspYiaKSfE72c3N5P5NzEjtc'
-            }
+//Get Mccormick Data
+function getMccormickData(database)
+{
+  var options = {
+    host: "gdt-api.mccormick.com",
+    port: 443,
+    path: '/recipes?page=0&size=20',
+    method: 'GET',
+    headers: {
+      'Content-type': 'application/json',
+      'x-api-key': '0CjwofWEIr38gpQIaspYiaKSfE72c3N5P5NzEjtc'
+    }
+  };
+
+  var data = ""
+  https.request(options, function(res) {
+    console.log('STATUS: ' + res.statusCode);
+    console.log('HEADERS: ' + JSON.stringify(res.headers));
+    res.setEncoding('utf8');
+    res.on('data', function (chunk) {
+      data += chunk;
+    });
+
+    res.on('end',function(){
+      console.log(data);
+      data = JSON.parse(data);
+
+      // DO SOMETHING WITH DATA HERE
+      jsonToMongo(database, data)
+    })
+  }).end();
+}
+
+//Put Mccormick Response in Mongo
+function jsonToMongo(database, theData) {
+  //Get all recipes
+  database.insert(theData, function (err, result) {
+    if (err) {
+      next(err);
+    } 
+  });
 };
 
-https.request(options, function(res) {
-  console.log('STATUS: ' + res.statusCode);
-  console.log('HEADERS: ' + JSON.stringify(res.headers));
-  res.setEncoding('utf8');
-  res.on('data', function (chunk) {
-    data += chunk;
-  });
-
-  res.on('end',function(){
-        console.log(data);
-        data = JSON.parse(data);
-        console.log(Object.prototype.toString.call(data));
-        jsonToMongo(data);
-  })
-}).end();
-*/
-
-  //End Getting the Data
-
-  //Putting in Mongo
-
-    //End putting in mongo
-
-//endpre
-
-app.get('/', function(req, res, next) {
-  res.set({
-    "Content-type" : "application/json",
-    'x-api-key': "0CjwofWEIr38gpQIaspYiaKSfE72c3N5P5NzEjtc"
-  })
-  res.redirect('https://gdt-api.mccormick.com/recipes?page=0&size=20');
-  //res.render('home');
-});
+//DON'T MODIFY ANYTHING BELOW
 
 //Setup Handlebars
 var handlebars = require('express-handlebars').create(
-  {
-    defaultLayout:'main',
-    helpers: require('./myHelpers.js')
-  });
+{
+  defaultLayout:'main',
+  helpers: require('./myHelpers.js')
+});
 
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
