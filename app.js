@@ -13,7 +13,7 @@ var app = express();
 var https = require('https');
 
 //Do the things
-doThing();
+//doThing();
 
 function doThing() {
   var MongoClient = mongodb.MongoClient;
@@ -34,13 +34,14 @@ function doThing() {
   })
 }
 
+
 //Get Mccormick Data
 function getMccormickData(database)
 {
   var options = {
     host: "gdt-api.mccormick.com",
     port: 443,
-    path: '/recipes?page=0&size=300',
+    path: '/recipes?page=4&size=3',
     method: 'GET',
     headers: {
       'Content-type': 'application/json',
@@ -77,18 +78,6 @@ function jsonToMongo(database, theData) {
   });
   database.close();
 };
-
-//Iterate through the recipies collection
-//function recipiesIter(database) {
-  //  database.recipies.
-
-//};
-//Modify the built database
-//function dbModify(database) {
-  //  database.recipes.find()
-
-
-//};
 
 //DON'T MODIFY ANYTHING BELOW
 
