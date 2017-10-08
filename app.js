@@ -4,12 +4,94 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var mongo = require('mongodb');
+var mongodb = require('mongodb');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+
+//Pre
+
+  //Getting the Data
+
+var data = ""
+var https = require('https');
+
+function jsonToMongo(theData) {
+  var MongoClient = mongodb.MongoClient;
+  var url = 'mongodb://localhost:27017/sampsite';
+
+    // Connect to the server
+  MongoClient.connect(url, function (err, db) {
+    if (err) {
+      err.message = "Failed To Connect to MongoDB";
+      return next(err);
+    }
+
+    //Get the database collection 
+    console.log('Connection established to', url);
+    var myDB = db.collection('testdb');
+
+    //Get all recipes
+    myDB.insert(theData, function (err, result) {
+      if (err) {
+        next(err);
+      } 
+      else {
+      }
+      console.log('Closing DB connection...')
+      db.close();
+      console.log('Connection Closed')
+    });
+  });
+}
+
+/*
+var options = {
+  host: "gdt-api.mccormick.com",
+  port: 443,
+  path: '/recipes?page=0&size=20',
+  method: 'GET',
+  headers: {
+            'Content-type': 'application/json',
+            'x-api-key': '0CjwofWEIr38gpQIaspYiaKSfE72c3N5P5NzEjtc'
+            }
+};
+
+https.request(options, function(res) {
+  console.log('STATUS: ' + res.statusCode);
+  console.log('HEADERS: ' + JSON.stringify(res.headers));
+  res.setEncoding('utf8');
+  res.on('data', function (chunk) {
+    data += chunk;
+  });
+
+  res.on('end',function(){
+        console.log(data);
+        data = JSON.parse(data);
+        console.log(Object.prototype.toString.call(data));
+        jsonToMongo(data);
+  })
+}).end();
+*/
+
+  //End Getting the Data
+
+  //Putting in Mongo
+
+    //End putting in mongo
+
+//endpre
+
+app.get('/', function(req, res, next) {
+  res.set({
+    "Content-type" : "application/json",
+    'x-api-key': "0CjwofWEIr38gpQIaspYiaKSfE72c3N5P5NzEjtc"
+  })
+  res.redirect('https://gdt-api.mccormick.com/recipes?page=0&size=20');
+  //res.render('home');
+});
 
 //Setup Handlebars
 var handlebars = require('express-handlebars').create(

@@ -2,11 +2,20 @@
 <html>
 <head>
 	<title>The Website</title>
+	{{>head}}
 </head>
-<body ng-app="">	
-	{{{body}}}
+<body ng-app="" style = "text-align: center;">	
+	<div class = "container">
+		<div class = "jumbotron" style= "overflow: auto;">
+			{{{body}}}
+		</div>
+	</div>
 </body>
 
+<div id = "MyReactApp"></div>
+
 <script src='/lib/angular/angular.js'></script>
-<script src='/application.js'></script>
+<script src='/angular-app.js'></script>
+<script src='/build/bundle.js' type="text/javascript"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </html>
