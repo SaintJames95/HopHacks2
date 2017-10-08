@@ -41,7 +41,7 @@ function getMccormickData(database)
   var options = {
     host: "gdt-api.mccormick.com",
     port: 443,
-    path: '/recipes?page=0&size=20',
+    path: '/recipes?page=0&size=100',
     method: 'GET',
     headers: {
       'Content-type': 'application/json',
@@ -63,7 +63,7 @@ function getMccormickData(database)
       data = JSON.parse(data);
 
       // DO SOMETHING WITH DATA HERE
-      jsonToMongo(database, data)
+      jsonToMongo(database, data.content)
     })
   }).end();
 }
