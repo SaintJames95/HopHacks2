@@ -28,8 +28,8 @@ function doThing() {
       console.log('Connection established to', url);
       
       // DO THING HERE
-      var myDB = db.collection('recipes');
-      getMccormickData(myDB)
+      //var myDB = db.collection('recipes');
+      getMccormickData(db)
     }
   })
 }
@@ -70,13 +70,25 @@ function getMccormickData(database)
 //Put Mccormick Response in Mongo
 function jsonToMongo(database, theData) {
   //Get all recipes
-  database.insert(theData, function (err, result) {
+  database.collection("recipes").insert(theData, function (err, result) {
     if (err) {
       next(err);
     } 
   });
   database.close();
 };
+
+//Iterate through the recipies collection
+//function recipiesIter(database) {
+  //  database.recipies.
+
+//};
+//Modify the built database
+//function dbModify(database) {
+  //  database.recipes.find()
+
+
+//};
 
 //DON'T MODIFY ANYTHING BELOW
 
